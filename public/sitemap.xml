@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://arcaprompt.arcapush.com/sitemap.xml

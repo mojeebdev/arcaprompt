@@ -1,0 +1,40 @@
+# ArcaPrompt by Arcapush
+
+> Turn your raw product idea into a structured prompt stack, recommended tech stack, hosting advice, and name/domain suggestions — in seconds.
+
+ArcaPrompt is built for vibe coders and solo founders who know what they want to build but struggle to write prompts that actually communicate their vision to an LLM. Describe your idea in plain language, and PushPrompt engineers it into ready-to-use prompts you can drop into Claude, GPT-4, Gemini, or any LLM of your choice.
+
+## What it does
+
+- Accepts a plain-language product idea as input
+- Generates a 4-part structured prompt stack:
+  - System Prompt — defines the AI's role and context
+  - Build Prompt — full product spec for an LLM
+  - UX & Design Prompt — UI/UX direction and aesthetic
+  - Edge Cases Prompt — error handling and failure scenarios
+- Recommends a practical tech stack (frontend, backend, database, auth, hosting)
+- Suggests unique, non-generic product names if the user doesn't have one
+- Suggests domain names based on the product name
+- Generates a punchy one-liner for the product
+- Outputs everything as a single copyable block
+- Allows sharing results to X (Twitter)
+
+## Who it's for
+
+- Vibe coders who build products fast but want stronger prompts
+- Solo founders spinning up ideas without a technical co-founder
+- Developers exploring new product ideas who want a quick scaffold
+- Anyone who wants to go from idea to first prompt in under 60 seconds
+
+## Powered by
+
+- Gemini 2.5 Flash Lite (Google) — prompt generation engine
+- Powered by blindspotlab.xyz
+- Built by Arcapush.com — the directory where vibe-coded products get discovered
+- Founder: mojeeb.xyz / @mojeebeth
+
+## Links
+
+- App: https://arcaprompt.arcapush.com
+- Parent directory: https://arcapush.com
+- Founder: https://mojeeb.xyz
