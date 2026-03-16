@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(5, "20 m"),
+  analytics: true,
+  prefix: "arcaprompt",
+});
 
 const SYSTEM_PROMPT = `You are ArcaPrompt — an expert prompt engineer and tech architect for vibe coders and solo founders.
 
@@ -37,10 +46,40 @@ Rules:
 
 export async function POST(req: NextRequest) {
   try {
+    // ── RATE LIMIT ──────────────────────────────────────
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("x-real-ip") ??
+      "anonymous";
+
+    const { success, limit, remaining, reset } = await ratelimit.limit(ip);
+
+    if (!success) {
+      const resetIn = Math.ceil((reset - Date.now()) / 1000 / 60);
+      return NextResponse.json(
+        {
+          error: `You've hit the limit. You can generate ${limit} prompt stacks every 20 minutes. Try again in ${resetIn} minute${resetIn === 1 ? "" : "s"}.`,
+          resetAt: new Date(reset).toISOString(),
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+          },
+        }
+      );
+    }
+    // ────────────────────────────────────────────────────
+
     const { idea, projectName } = await req.json();
 
     if (!idea || idea.trim().length < 20) {
-      return NextResponse.json({ error: "Idea too short. Give me more to work with." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Idea too short. Give me more to work with." },
+        { status: 400 }
+      );
     }
 
     const model = genAI.getGenerativeModel({
@@ -55,20 +94,34 @@ export async function POST(req: NextRequest) {
     const result = await model.generateContent(userMessage);
     const raw = result.response.text().trim();
 
-    
-    const clean = raw.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
+    const clean = raw
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```\s*$/i, "")
+      .trim();
 
     let parsed;
     try {
       parsed = JSON.parse(clean);
     } catch {
       console.error("JSON parse failed:", clean.slice(0, 300));
-      return NextResponse.json({ error: "Engine returned unexpected format. Try again." }, { status: 500 });
+      return NextResponse.json(
+        { error: "Engine returned unexpected format. Try again." },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json(parsed);
+    return NextResponse.json(parsed, {
+      headers: {
+        "X-RateLimit-Limit": limit.toString(),
+        "X-RateLimit-Remaining": remaining.toString(),
+      },
+    });
   } catch (err) {
     console.error("ArcaPrompt API error:", err);
-    return NextResponse.json({ error: "System disruption. The machine is not responding." }, { status: 500 });
+    return NextResponse.json(
+      { error: "System disruption. The machine is not responding." },
+      { status: 500 }
+    );
   }
 }
