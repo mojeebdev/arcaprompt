@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body style={{ margin: 0, background: "#04030f" }} suppressHydrationWarning>
         {children}
       </body>
-      <script defer src="https://cloud.umami.is/script.js" data-website-id="YOUR_UMAMI_ID"></script>
+      <script defer src="https://cloud.umami.is/script.js" data-website-id="e9f2b8ee-e2d5-4ada-a28e-69c4f7d708d1"></script>
     </html>
   );
 }
