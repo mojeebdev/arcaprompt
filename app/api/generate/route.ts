@@ -1,16 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(5, "20 m"),
-  analytics: true,
-  prefix: "arcaprompt",
-});
+// ── IN-MEMORY RATE LIMITER ───────────────────────────────────────────────────
+// 5 requests per 20 minutes per IP. Resets on server restart (fine for Vercel
+// serverless — each function instance tracks its own window).
+const RATE_LIMIT = 5;
+const WINDOW_MS = 20 * 60 * 1000; // 20 minutes
+
+const ipStore = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string): {
+  success: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+} {
+  const now = Date.now();
+  const entry = ipStore.get(ip);
+
+  if (!entry || now >= entry.resetAt) {
+    // Fresh window
+    ipStore.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    return { success: true, limit: RATE_LIMIT, remaining: RATE_LIMIT - 1, reset: now + WINDOW_MS };
+  }
+
+  if (entry.count >= RATE_LIMIT) {
+    return { success: false, limit: RATE_LIMIT, remaining: 0, reset: entry.resetAt };
+  }
+
+  entry.count += 1;
+  return { success: true, limit: RATE_LIMIT, remaining: RATE_LIMIT - entry.count, reset: entry.resetAt };
+}
+
+
+let cleanupCounter = 0;
+function maybeCleanup() {
+  if (++cleanupCounter % 100 !== 0) return;
+  const now = Date.now();
+  for (const [key, val] of ipStore.entries()) {
+    if (now >= val.resetAt) ipStore.delete(key);
+  }
+}
+
 
 const SYSTEM_PROMPT = `You are ArcaPrompt — an expert prompt engineer and tech architect for vibe coders and solo founders.
 
@@ -46,13 +79,14 @@ Rules:
 
 export async function POST(req: NextRequest) {
   try {
-    // ── RATE LIMIT ──────────────────────────────────────
+   
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
       req.headers.get("x-real-ip") ??
       "anonymous";
 
-    const { success, limit, remaining, reset } = await ratelimit.limit(ip);
+    maybeCleanup();
+    const { success, limit, remaining, reset } = checkRateLimit(ip);
 
     if (!success) {
       const resetIn = Math.ceil((reset - Date.now()) / 1000 / 60);
@@ -71,8 +105,7 @@ export async function POST(req: NextRequest) {
         }
       );
     }
-    // ────────────────────────────────────────────────────
-
+   
     const { idea, projectName } = await req.json();
 
     if (!idea || idea.trim().length < 20) {
