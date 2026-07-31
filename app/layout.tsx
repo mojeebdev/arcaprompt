@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     site: "@Arcapush",
-    creator: "@mojeebeth",
+    creator: "@MojeebMotion",
     title: "ArcaPrompt | Build Better. Prompt Smarter.",
     description: "Stop fumbling your prompts. Describe your idea — ArcaPrompt structures it, stacks it, and ships you ready to build.",
     images: ["/og-acraprompt.png"],

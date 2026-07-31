@@ -31,7 +31,7 @@ ArcaPrompt is built for vibe coders and solo founders who know what they want to
 - Gemini 2.5 Flash Lite (Google) — prompt generation engine
 - Powered by blindspotlab.xyz
 - Built by Arcapush.com — the directory where vibe-coded products get discovered
-- Founder: mojeeb.xyz / @mojeebeth
+- Founder: mojeeb.xyz / @MojeebMotion
 
 ## Links
 

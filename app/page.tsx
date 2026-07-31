@@ -858,7 +858,7 @@ Powered by Gemini · Built by Arcapush.com
               Founder{" "}
               <a href="https://mojeeb.xyz" target="_blank" rel="noopener noreferrer">mojeeb.xyz</a>
               {" · "}
-              <a href="https://x.com/mojeebeth" target="_blank" rel="noopener noreferrer">@mojeebeth</a>
+              <a href="https://x.com/MojeebMotion" target="_blank" rel="noopener noreferrer">@MojeebMotion</a>
               {" · "}
               Engine by{" "}
               <span style={{ color: "#4285F4", opacity: 0.7 }}>Gemini</span>
